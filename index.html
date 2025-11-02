@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Origin & Type Checker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .result h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .result-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        
+        .euro-car {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .electric-car {
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        @media (min-width: 768px) {
+            .form-row {
+                display: flex;
+                gap: 20px;
+            }
+            
+            .form-group {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Car Origin & Type Checker</h1>
+        
+        <form id="carForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="year">Year</label>
+                    <input type="number" id="year" min="1900" max="2030" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="make">Make</label>
+                    <input type="text" id="make" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="model">Model</label>
+                    <input type="text" id="model" required>
+                </div>
+            </div>
+            
+            <button type="submit">Check Car Details</button>
+        </form>
+        
+        <div id="result" class="result">
+            <h2>Car Analysis Results</h2>
+            <div id="euroResult" class="result-item euro-car">
+                <span class="icon">🇪🇺</span>
+                <span id="euroText"></span>
+            </div>
+            <div id="electricResult" class="result-item electric-car">
+                <span class="icon">⚡</span>
+                <span id="electricText"></span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This tool checks if your car is of German/European origin and if it's electric.</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('carForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const year = parseInt(document.getElementById('year').value);
+            const make = document.getElementById('make').value.toLowerCase().trim();
+            const model = document.getElementById('model').value.toLowerCase().trim();
+            
+            // Check if it's a German/European car
+            const germanMakes = [
+                'volkswagen', 'vw', 'audi', 'bmw', 'mercedes-benz', 'mercedes', 'benz',
+                'porsche', 'opel', 'mini', 'smart'
+            ];
+            
+            const europeanMakes = [
+                'volvo', 'saab', 'fiat', 'alfa romeo', 'alfa', 'lancia', 'ferrari', 'lamborghini',
+                'maserati', 'renault', 'peugeot', 'citroen', 'bugatti', 'skoda', 'seat'
+            ];
+            
+            const allEuropeanMakes = [...germanMakes, ...europeanMakes];
+            
+            let isEuropean = false;
+            let country = '';
+            
+            for (const europeanMake of allEuropeanMakes) {
+                if (make.includes(europeanMake)) {
+                    isEuropean = true;
+                    if (germanMakes.includes(europeanMake)) {
+                        country = 'German';
+                    } else {
+                        country = 'European';
+                    }
+                    break;
+                }
+            }
+            
+            // Check if it's an electric car
+            const electricModels = [
+                'model s', 'model 3', 'model x', 'model y', 'id.3', 'id.4', 'id.buzz', 'id.7',
+                'e-tron', 'q4 e-tron', 'q8 e-tron', 'e-tron gt', 'i3', 'i4', 'i7', 'ix', 'eqs', 
+                'eqe', 'eqb', 'taycan', 'ioniq 5', 'ioniq 6', 'ev6', 'niro ev', 'kona electric',
+                'leaf', 'ariya', 'zoe', 'bolt', 'bolt euv', 'id', 'zoe', '500e', 'mx-30', 'mokka-e',
+                'corsa-e', '208', 'e-208', 'e-2008', 'born', 'enyaq', 'evija', 'elise', 'emira',
+                'evora', 'exige', 'emeya', 'eletre', 'zero', 'cypher', 'rt1', 'rt2', 'rt3'
+            ];
+            
+            let isElectric = false;
+            
+            for (const electricModel of electricModels) {
+                if (model.includes(electricModel)) {
+                    isElectric = true;
+                    break;
+                }
+            }
+            
+            // Also check if the make is specifically electric-only
+            const electricOnlyMakes = ['tesla', 'rivian', 'lucid', 'nio', 'xpeng', 'polestar'];
+            
+            if (electricOnlyMakes.includes(make)) {
+                isElectric = true;
+            }
+            
+            // Display results
+            const resultDiv = document.getElementById('result');
+            const euroText = document.getElementById('euroText');
+            const electricText = document.getElementById('electricText');
+            
+            if (isEuropean) {
+                euroText.textContent = `This is a ${country} car.`;
+            } else {
+                euroText.textContent = 'This is not a German/European car.';
+            }
+            
+            if (isElectric) {
+                electricText.textContent = 'This is an electric car.';
+            } else {
+                electricText.textContent = 'This is not an electric car.';
+            }
+            
+            resultDiv.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
