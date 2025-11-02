@@ -92,17 +92,21 @@
         
         .result-item {
             margin-bottom: 10px;
-            padding: 10px;
+            padding: 15px;
             border-radius: 5px;
             background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
         }
         
-        .euro-car {
-            border-left: 4px solid #e74c3c;
-        }
-        
-        .electric-car {
+        .result-positive {
             border-left: 4px solid #2ecc71;
+            background-color: #e8f8ef;
+        }
+        
+        .result-negative {
+            border-left: 4px solid #e74c3c;
+            background-color: #fdedec;
         }
         
         .icon {
@@ -114,6 +118,27 @@
             margin-top: 30px;
             text-align: center;
             color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .info-text {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .confidence {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 5px;
+        }
+        
+        .accuracy-warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
             font-size: 14px;
         }
         
@@ -138,16 +163,19 @@
                 <div class="form-group">
                     <label for="year">Year</label>
                     <input type="number" id="year" min="1900" max="2030" required>
+                    <div class="info-text">Enter the model year (e.g., 2020)</div>
                 </div>
                 
                 <div class="form-group">
                     <label for="make">Make</label>
                     <input type="text" id="make" required>
+                    <div class="info-text">Enter the manufacturer (e.g., Toyota, BMW)</div>
                 </div>
                 
                 <div class="form-group">
                     <label for="model">Model</label>
                     <input type="text" id="model" required>
+                    <div class="info-text">Enter the specific model (e.g., Camry, Model 3)</div>
                 </div>
             </div>
             
@@ -156,18 +184,27 @@
         
         <div id="result" class="result">
             <h2>Car Analysis Results</h2>
-            <div id="euroResult" class="result-item euro-car">
+            <div id="euroResult" class="result-item">
                 <span class="icon">🇪🇺</span>
-                <span id="euroText"></span>
+                <div>
+                    <span id="euroText"></span>
+                    <div id="euroConfidence" class="confidence"></div>
+                </div>
             </div>
-            <div id="electricResult" class="result-item electric-car">
+            <div id="electricResult" class="result-item">
                 <span class="icon">⚡</span>
-                <span id="electricText"></span>
+                <div>
+                    <span id="electricText"></span>
+                    <div id="electricConfidence" class="confidence"></div>
+                </div>
+            </div>
+            <div id="accuracyWarning" class="accuracy-warning" style="display: none;">
+                Note: For older or rare vehicles, manual verification may be needed.
             </div>
         </div>
         
         <div class="footer">
-            <p>This tool checks if your car is of German/European origin and if it's electric.</p>
+            <p>This tool checks if your car is of European origin and if it's electric.</p>
         </div>
     </div>
 
@@ -180,75 +217,279 @@
             const make = document.getElementById('make').value.toLowerCase().trim();
             const model = document.getElementById('model').value.toLowerCase().trim();
             
-            // Check if it's a German/European car
-            const germanMakes = [
-                'volkswagen', 'vw', 'audi', 'bmw', 'mercedes-benz', 'mercedes', 'benz',
-                'porsche', 'opel', 'mini', 'smart'
-            ];
+            // Comprehensive European car database
+            const europeanMakes = {
+                // German makes
+                'volkswagen': { country: 'German', confidence: 'high' },
+                'vw': { country: 'German', confidence: 'high' },
+                'audi': { country: 'German', confidence: 'high' },
+                'bmw': { country: 'German', confidence: 'high' },
+                'mercedes-benz': { country: 'German', confidence: 'high' },
+                'mercedes': { country: 'German', confidence: 'high' },
+                'benz': { country: 'German', confidence: 'medium' },
+                'porsche': { country: 'German', confidence: 'high' },
+                'opel': { country: 'German', confidence: 'high' },
+                'mini': { country: 'German', confidence: 'high' },
+                'smart': { country: 'German', confidence: 'high' },
+                'maybach': { country: 'German', confidence: 'high' },
+                'wiesmann': { country: 'German', confidence: 'high' },
+                'gumpert': { country: 'German', confidence: 'high' },
+                
+                // Italian makes
+                'fiat': { country: 'Italian', confidence: 'high' },
+                'alfa romeo': { country: 'Italian', confidence: 'high' },
+                'alfa': { country: 'Italian', confidence: 'medium' },
+                'lancia': { country: 'Italian', confidence: 'high' },
+                'ferrari': { country: 'Italian', confidence: 'high' },
+                'lamborghini': { country: 'Italian', confidence: 'high' },
+                'maserati': { country: 'Italian', confidence: 'high' },
+                'pagani': { country: 'Italian', confidence: 'high' },
+                'bugatti': { country: 'Italian/French', confidence: 'high' },
+                'abarth': { country: 'Italian', confidence: 'high' },
+                
+                // French makes
+                'renault': { country: 'French', confidence: 'high' },
+                'peugeot': { country: 'French', confidence: 'high' },
+                'citroen': { country: 'French', confidence: 'high' },
+                'ds': { country: 'French', confidence: 'high' },
+                'alpine': { country: 'French', confidence: 'high' },
+                'venturi': { country: 'French', confidence: 'high' },
+                
+                // British makes
+                'jaguar': { country: 'British', confidence: 'high' },
+                'land rover': { country: 'British', confidence: 'high' },
+                'rover': { country: 'British', confidence: 'high' },
+                'mg': { country: 'British', confidence: 'high' },
+                'aston martin': { country: 'British', confidence: 'high' },
+                'bentley': { country: 'British', confidence: 'high' },
+                'lotus': { country: 'British', confidence: 'high' },
+                'mclaren': { country: 'British', confidence: 'high' },
+                'rolls-royce': { country: 'British', confidence: 'high' },
+                'rolls royce': { country: 'British', confidence: 'high' },
+                'mini': { country: 'British', confidence: 'high' },
+                'vauxhall': { country: 'British', confidence: 'high' },
+                'caterham': { country: 'British', confidence: 'high' },
+                'noble': { country: 'British', confidence: 'high' },
+                
+                // Swedish makes
+                'volvo': { country: 'Swedish', confidence: 'high' },
+                'saab': { country: 'Swedish', confidence: 'high' },
+                'koenigsegg': { country: 'Swedish', confidence: 'high' },
+                
+                // Spanish makes
+                'seat': { country: 'Spanish', confidence: 'high' },
+                'cupra': { country: 'Spanish', confidence: 'high' },
+                'hispano-suiza': { country: 'Spanish', confidence: 'high' },
+                
+                // Czech makes
+                'skoda': { country: 'Czech', confidence: 'high' },
+                
+                // Dutch makes
+                'spyker': { country: 'Dutch', confidence: 'high' },
+                
+                // Other European makes
+                'dacia': { country: 'Romanian', confidence: 'high' },
+                'lada': { country: 'Russian', confidence: 'high' }
+            };
             
-            const europeanMakes = [
-                'volvo', 'saab', 'fiat', 'alfa romeo', 'alfa', 'lancia', 'ferrari', 'lamborghini',
-                'maserati', 'renault', 'peugeot', 'citroen', 'bugatti', 'skoda', 'seat'
-            ];
-            
-            const allEuropeanMakes = [...germanMakes, ...europeanMakes];
-            
+            // Check if it's a European car
             let isEuropean = false;
             let country = '';
+            let confidence = '';
+            let showWarning = false;
             
-            for (const europeanMake of allEuropeanMakes) {
+            for (const [europeanMake, info] of Object.entries(europeanMakes)) {
                 if (make.includes(europeanMake)) {
                     isEuropean = true;
-                    if (germanMakes.includes(europeanMake)) {
-                        country = 'German';
-                    } else {
-                        country = 'European';
+                    country = info.country;
+                    confidence = info.confidence;
+                    
+                    // Show warning for older cars with potential manufacturing changes
+                    if (year < 1990 && info.confidence === 'medium') {
+                        showWarning = true;
                     }
                     break;
                 }
             }
             
-            // Check if it's an electric car
-            const electricModels = [
-                'model s', 'model 3', 'model x', 'model y', 'id.3', 'id.4', 'id.buzz', 'id.7',
-                'e-tron', 'q4 e-tron', 'q8 e-tron', 'e-tron gt', 'i3', 'i4', 'i7', 'ix', 'eqs', 
-                'eqe', 'eqb', 'taycan', 'ioniq 5', 'ioniq 6', 'ev6', 'niro ev', 'kona electric',
-                'leaf', 'ariya', 'zoe', 'bolt', 'bolt euv', 'id', 'zoe', '500e', 'mx-30', 'mokka-e',
-                'corsa-e', '208', 'e-208', 'e-2008', 'born', 'enyaq', 'evija', 'elise', 'emira',
-                'evora', 'exige', 'emeya', 'eletre', 'zero', 'cypher', 'rt1', 'rt2', 'rt3'
+            // Comprehensive electric vehicle database with year considerations
+            const electricModels = {
+                // Tesla (all models are electric)
+                'model s': { year: 2012, confidence: 'high' },
+                'model 3': { year: 2017, confidence: 'high' },
+                'model x': { year: 2015, confidence: 'high' },
+                'model y': { year: 2020, confidence: 'high' },
+                'cybertruck': { year: 2023, confidence: 'high' },
+                'roadster': { year: 2008, confidence: 'high' },
+                
+                // Volkswagen ID series
+                'id.3': { year: 2020, confidence: 'high' },
+                'id.4': { year: 2020, confidence: 'high' },
+                'id.buzz': { year: 2022, confidence: 'high' },
+                'id.5': { year: 2021, confidence: 'high' },
+                'id.7': { year: 2023, confidence: 'high' },
+                
+                // Audi e-tron series
+                'e-tron': { year: 2018, confidence: 'high' },
+                'q4 e-tron': { year: 2021, confidence: 'high' },
+                'q8 e-tron': { year: 2022, confidence: 'high' },
+                'e-tron gt': { year: 2021, confidence: 'high' },
+                
+                // BMW i series
+                'i3': { year: 2013, confidence: 'high' },
+                'i4': { year: 2021, confidence: 'high' },
+                'i7': { year: 2022, confidence: 'high' },
+                'ix': { year: 2021, confidence: 'high' },
+                'ix3': { year: 2020, confidence: 'high' },
+                
+                // Mercedes EQ series
+                'eqs': { year: 2021, confidence: 'high' },
+                'eqe': { year: 2022, confidence: 'high' },
+                'eqb': { year: 2021, confidence: 'high' },
+                'eqa': { year: 2021, confidence: 'high' },
+                
+                // Porsche
+                'taycan': { year: 2019, confidence: 'high' },
+                
+                // Hyundai/Kia
+                'ioniq 5': { year: 2021, confidence: 'high' },
+                'ioniq 6': { year: 2022, confidence: 'high' },
+                'ev6': { year: 2021, confidence: 'high' },
+                'niro ev': { year: 2018, confidence: 'high' },
+                'kona electric': { year: 2018, confidence: 'high' },
+                'ioniq electric': { year: 2016, confidence: 'high' },
+                
+                // Nissan
+                'leaf': { year: 2010, confidence: 'high' },
+                'ariya': { year: 2022, confidence: 'high' },
+                
+                // Chevrolet
+                'bolt': { year: 2016, confidence: 'high' },
+                'bolt euv': { year: 2022, confidence: 'high' },
+                'spark ev': { year: 2013, confidence: 'high' },
+                
+                // Ford
+                'mustang mach-e': { year: 2020, confidence: 'high' },
+                'f-150 lightning': { year: 2022, confidence: 'high' },
+                'focus electric': { year: 2011, confidence: 'high' },
+                
+                // General Motors
+                'hummer ev': { year: 2021, confidence: 'high' },
+                
+                // Rivian
+                'r1t': { year: 2021, confidence: 'high' },
+                'r1s': { year: 2022, confidence: 'high' },
+                
+                // Lucid
+                'air': { year: 2021, confidence: 'high' },
+                
+                // Polestar
+                'polestar 2': { year: 2020, confidence: 'high' },
+                
+                // Other EVs
+                'zoe': { year: 2012, confidence: 'high' },
+                '500e': { year: 2013, confidence: 'high' },
+                'mx-30': { year: 2020, confidence: 'high' },
+                'mokka-e': { year: 2020, confidence: 'high' },
+                'corsa-e': { year: 2020, confidence: 'high' },
+                'e-208': { year: 2019, confidence: 'high' },
+                'e-2008': { year: 2019, confidence: 'high' },
+                'born': { year: 2021, confidence: 'high' },
+                'enyaq': { year: 2020, confidence: 'high' },
+                'evija': { year: 2020, confidence: 'high' },
+                'emeya': { year: 2023, confidence: 'high' },
+                'eletre': { year: 2022, confidence: 'high' },
+                'zero': { year: 2008, confidence: 'high' },
+                'cypher': { year: 2022, confidence: 'high' },
+                'rt1': { year: 2022, confidence: 'high' },
+                'rt2': { year: 2023, confidence: 'high' },
+                'rt3': { year: 2024, confidence: 'high' },
+                
+                // Early EVs (with lower confidence for older years)
+                'ev1': { year: 1996, confidence: 'medium' },
+                'rav4 ev': { year: 1997, confidence: 'medium' }
+            };
+            
+            // Electric-only manufacturers
+            const electricOnlyMakes = [
+                'tesla', 'rivian', 'lucid', 'nio', 'xpeng', 'polestar', 'faraday future',
+                'fisker', 'canoo', 'arrival', 'bollinger', 'byton', 'lordstown'
             ];
             
             let isElectric = false;
+            let electricConfidence = '';
             
-            for (const electricModel of electricModels) {
+            // Check if the make is electric-only
+            if (electricOnlyMakes.includes(make)) {
+                isElectric = true;
+                electricConfidence = 'high';
+            }
+            
+            // Check if the model is electric
+            for (const [electricModel, info] of Object.entries(electricModels)) {
                 if (model.includes(electricModel)) {
-                    isElectric = true;
+                    // Check if the car year is plausible for this model
+                    if (year >= info.year) {
+                        isElectric = true;
+                        electricConfidence = info.confidence;
+                    } else {
+                        // Model exists but car year is before the model was introduced
+                        isElectric = false;
+                        electricConfidence = 'low';
+                        showWarning = true;
+                    }
                     break;
                 }
             }
             
-            // Also check if the make is specifically electric-only
-            const electricOnlyMakes = ['tesla', 'rivian', 'lucid', 'nio', 'xpeng', 'polestar'];
-            
-            if (electricOnlyMakes.includes(make)) {
-                isElectric = true;
+            // Check for common EV indicators in model names
+            const evIndicators = ['ev', 'electric', 'e-', 'i3', 'i8', 'eq'];
+            for (const indicator of evIndicators) {
+                if (model.includes(indicator) && !isElectric) {
+                    isElectric = true;
+                    electricConfidence = 'medium';
+                    showWarning = true;
+                    break;
+                }
             }
             
             // Display results
             const resultDiv = document.getElementById('result');
+            const euroResult = document.getElementById('euroResult');
+            const electricResult = document.getElementById('electricResult');
             const euroText = document.getElementById('euroText');
             const electricText = document.getElementById('electricText');
+            const euroConfidence = document.getElementById('euroConfidence');
+            const electricConfidenceEl = document.getElementById('electricConfidence');
+            const accuracyWarning = document.getElementById('accuracyWarning');
             
+            // Update European car result with color coding
             if (isEuropean) {
                 euroText.textContent = `This is a ${country} car.`;
+                euroConfidence.textContent = `Confidence: ${confidence}`;
+                euroResult.className = 'result-item result-positive';
             } else {
-                euroText.textContent = 'This is not a German/European car.';
+                euroText.textContent = 'This is not a European car.';
+                euroConfidence.textContent = '';
+                euroResult.className = 'result-item result-negative';
             }
             
+            // Update electric car result with color coding
             if (isElectric) {
                 electricText.textContent = 'This is an electric car.';
+                electricConfidenceEl.textContent = `Confidence: ${electricConfidence}`;
+                electricResult.className = 'result-item result-positive';
             } else {
                 electricText.textContent = 'This is not an electric car.';
+                electricConfidenceEl.textContent = '';
+                electricResult.className = 'result-item result-negative';
+            }
+            
+            // Show warning if needed
+            if (showWarning || electricConfidence === 'low' || confidence === 'medium') {
+                accuracyWarning.style.display = 'block';
+            } else {
+                accuracyWarning.style.display = 'none';
             }
             
             resultDiv.style.display = 'block';
